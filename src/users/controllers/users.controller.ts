@@ -1,23 +1,44 @@
-import { Body, Controller, Get, Param, Post, Req, Res } from "@nestjs/common";
-import { Request, Response } from "express";
-import { CreateUserDto } from "../dtos/CreateUser.dto";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import {
+  Body,
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  Param,
+  ParseBoolPipe,
+  ParseIntPipe,
+  Post,
+  Query,
+  Req,
+  Res,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
+import { Request, Response } from 'express';
+import { CreateUserDto } from '../dtos/CreateUser.dto';
+import { UsersService } from '../services/users/users.service';
 
-@Controller("users")
+@Controller('users')
 export class UsersController {
-  @Get("users")
+  constructor(private userService: UsersService) {}
+
+  @Get()
   getUsers() {
-    return { msg: "oussama", email: "oussama@gmail.com" };
+    return this.userService.fetchUsers();
   }
 
-  @Post()
+  @Post('create')
+  @UsePipes(new ValidationPipe())
   createUser(@Body() userData: CreateUserDto) {
     console.log(userData);
-    return {};
+    return this.userService.createUser(userData);
   }
 
-  @Get(":id")
-  getUserById(@Param('id') id: string) {
-    console.log(id);
-    return { id }
+  @Get(':id')
+  getUserById(@Param('id', ParseIntPipe) id: number) {
+    const user = this.userService.fetchUserById(id);
+    if (!user)
+      throw new HttpException('user not found', HttpStatus.BAD_REQUEST);
   }
 }
